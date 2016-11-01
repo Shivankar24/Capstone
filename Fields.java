@@ -23,14 +23,15 @@ public class Fields {
 	
 	static ArrayList<Integer> irreducible;
 	static ArrayList<Integer> small_irreducible;
+	static int k;
 	
 	
-	
-	public Fields(int k) {
+	public Fields(int k1) {
 		//constructor to initalize the irreducible polynomial and small_irreducible of GF(2^k)
 		irreducible=new ArrayList<Integer>();
+		this.k=k1;
 		String x=new String();
-		switch (k)
+		switch (k1)
 		{
 			case 1:x="";
 				break;
@@ -48,7 +49,7 @@ public class Fields {
 				break;
 			case 8:x="101100011";
 				break;
-			case 9:x="10000100001";
+			case 9:x="1000010001";
 				break;
 			case 10:x="10000001001";
 				break;
@@ -60,7 +61,11 @@ public class Fields {
 				break;
 			case 14:x="101100000000011";
 				break;
-			case 20:x="100000000000000001001";
+			case 15:x="1000000000000011";
+				break;
+			case 20:x="000000000011";
+				break;
+			case 49:x="100000000000000000000000000000000000000001000000000";
 				break;
 			default: 
 				System.out.println("Too high! Enter a number up to 11");
@@ -133,10 +138,15 @@ public class Fields {
 		
 		 
 		 */
+//		if (poly1==null)
+//			return poly2;
+//		if (poly2==null)
+//			return poly1;
 		int x,y,num=0;
 		ArrayList<Integer> result=new ArrayList<Integer>();
 		ArrayList<Integer> big_poly=new ArrayList<Integer>();
 		ArrayList<Integer> small_poly=new ArrayList<Integer>();
+		//System.out.println(poly1+" "+poly2);
 		if (poly1.size()>poly2.size())
 		{
 			big_poly.addAll(poly1);
@@ -221,136 +231,171 @@ public class Fields {
 	
 	
 	
+//	public static ArrayList<Integer> helper_mod(ArrayList<Integer> poly)
+//	{
+//		/**
+//		 * This method takes a polynomial in ArrayListform and takes each individual term of it
+//		 * and finds it mod irreducible, sending it to the mod function. 
+//		 * It then adds all these mod values to get the final mod irreducible of the polynomial 
+//		 * 
+//		 * @param       poly    Array list representing polynomial
+//		 
+//		 
+//		 */
+//		ArrayList<Integer> positions=new ArrayList<Integer>();
+//		ArrayList<Integer> result=new ArrayList<Integer>();
+//		for (int i=0;i<poly.size();i++)
+//		{
+//		if (poly.get(i)==1)
+//			positions.add(i);
+//		}
+//		for (int i=0;i<positions.size();i++)
+//		{
+//			ArrayList<Integer> element=new ArrayList<Integer>();
+//			for (int j=0;j<positions.get(i);j++)
+//			{
+//				element.add(0);
+//			}
+//			element.add(1);
+//			result=Add(result,mod(element));
+//		}
+//		//System.out.println("idhar");
+//		return result;
+//	}
+	
 	public static ArrayList<Integer> helper_mod(ArrayList<Integer> poly)
 	{
-		/**
-		 * This method takes a polynomial in ArrayListform and takes each individual term of it
-		 * and finds it mod irreducible, sending it to the mod function. 
-		 * It then adds all these mod values to get the final mod irreducible of the polynomial 
-		 * 
-		 * @param       poly    Array list representing polynomial
-		 
-		 
-		 */
-		ArrayList<Integer> positions=new ArrayList<Integer>();
 		ArrayList<Integer> result=new ArrayList<Integer>();
+		if (poly.size()<irreducible.size())
+			return poly;
+		result.addAll(poly);
+		while (result.size()>=irreducible.size())
+		result=shift_XOR(result);
+		return result;
+		
+	}
+	
+	public static ArrayList<Integer> shift_XOR(ArrayList<Integer> poly)
+	{
+		ArrayList<Integer> result=new ArrayList<Integer>();
+		ArrayList<Integer> temp_irreducible=new ArrayList<Integer>();
+		temp_irreducible.addAll(irreducible);
+		while (temp_irreducible.size()<poly.size())
+			temp_irreducible.add(0,0);
 		for (int i=0;i<poly.size();i++)
 		{
-		if (poly.get(i)==1)
-			positions.add(i);
+			int x=((temp_irreducible.get(i)+poly.get(i))%2);
+			//if (x<0) x=x+2;
+			result.add(x);
 		}
-		for (int i=0;i<positions.size();i++)
-		{
-			ArrayList<Integer> element=new ArrayList<Integer>();
-			for (int j=0;j<positions.get(i);j++)
-			{
-				element.add(0);
-			}
-			element.add(1);
-			result=Add(result,mod(element));
+		while (result.size()>=1)
+		{	if (result.get(result.size()-1)==0)
+			result.remove(result.size()-1);
+		else break;
 		}
+		//System.out.println(result);
+		//System.exit(0);
 		return result;
 	}
-	
-	
-	
-	public static ArrayList<Integer> mod(ArrayList<Integer> poly)
-	{
-		/**
-		 * This method takes find the mod of polynomials of the form (x^k)
-		 * and returns the result. 
-		 * 
-		 * @param       poly1    Array list representing polynomial
-		 
-		 
-		 */
-		int irreducible_power=irreducible.size()-1;
-		int power=poly.size()-1;
-		
-		
-		
-		ArrayList<Integer> remainder_poly=new ArrayList<Integer>();
-		ArrayList<Integer> new_poly=new ArrayList<Integer>();
-		
-		if (power==irreducible_power)
-			return small_irreducible;
-		if (power<irreducible_power)
-			return poly;
-		
-			int a=power-irreducible_power;
-			remainder_poly=new ArrayList<Integer>();
-			new_poly=new ArrayList<Integer>();
-			for (int i=0;i<=a;i++)
-			{
-				if (i==a)
-					remainder_poly.add(1);
-				else
-					remainder_poly.add(0);
-			}
-			new_poly.addAll(Multiply(small_irreducible, remainder_poly));
-			
-			int count=0;ArrayList<Integer> positions=new ArrayList<Integer>();
-			for (int i=0;i<new_poly.size();i++)
-			{
-			if (new_poly.get(i)==1)
-				positions.add(i);
-			}
-			ArrayList<Integer> sub_new_poly1=new ArrayList<Integer>();
-			ArrayList<Integer> sub_new_poly2=new ArrayList<Integer>();
-			ArrayList<Integer> result=new ArrayList<Integer>();
-			//result.add(0);
-			
-			for (int i=0;i<positions.size();i++)
-			{
-				sub_new_poly1=new ArrayList<Integer>();
-				for (int j=0;j<positions.get(i);j++)
-					sub_new_poly1.add(0);
-				sub_new_poly1.add(1);
-				result=(Add((result),mod(sub_new_poly1)));
-			}
-			
-	
-			return result;
 
-	}
 	
-	public static ArrayList<Integer> divide(ArrayList<Integer> irreducible,ArrayList<Integer> poly)
-	{
-		/**
-		 * I wrote this function later realizing I wont need it! 
-		 * This method takes two polynomials in ArrayListform and returns irreducible/poly
-		 * in the form of an arrayList
-		 * 
-		 * @param       irreducible    Array list representing first polynomial
-		 * @param       poly    Array list representing second polynomial
-		
-		 
-		 */
-		ArrayList<Integer> remainder_poly=new ArrayList<Integer>();
-		ArrayList<Integer> result=new ArrayList<Integer>();
-		ArrayList<Integer> irreducible_copy=new ArrayList<Integer>();
-		irreducible_copy.addAll(irreducible);
-		int irreducible_power=irreducible.size()-1;
-		int power=poly.size()-1;
-		int a=irreducible_power-power;
-		
-		while (irreducible_power>=power)
-		{
-			remainder_poly=new ArrayList<Integer>();
-			for (int i=0;i<=a;i++)
-			{
-				if (i==a)
-					remainder_poly.add(1);
-				else
-					remainder_poly.add(0);
-			}
-			irreducible_copy=Subtract(irreducible_copy, Multiply(remainder_poly, poly));
-			irreducible_power=irreducible_copy.size()-1;
-			result=Add(result,remainder_poly);
-			a=irreducible_power-power;
-		}
-		return result;
-	}
+	
+//	public static ArrayList<Integer> mod(ArrayList<Integer> poly)
+//	{
+//		/**
+//		 * This method takes find the mod of polynomials of the form (x^k)
+//		 * and returns the result. 
+//		 * 
+//		 * @param       poly1    Array list representing polynomial
+//		 
+//		 
+//		 */
+//		int irreducible_power=irreducible.size()-1;
+//		int power=poly.size()-1;
+//		
+//		
+//		
+//		ArrayList<Integer> remainder_poly=new ArrayList<Integer>();
+//		ArrayList<Integer> new_poly=new ArrayList<Integer>();
+//		
+//		if (power==irreducible_power)
+//			return small_irreducible;
+//		if (power<irreducible_power)
+//			return poly;
+//		
+//			int a=power-irreducible_power;
+//			remainder_poly=new ArrayList<Integer>();
+//			new_poly=new ArrayList<Integer>();
+//			for (int i=0;i<=a;i++)
+//			{
+//				if (i==a)
+//					remainder_poly.add(1);
+//				else
+//					remainder_poly.add(0);
+//			}
+//			new_poly.addAll(Multiply(small_irreducible, remainder_poly));
+//			
+//			int count=0;ArrayList<Integer> positions=new ArrayList<Integer>();
+//			for (int i=0;i<new_poly.size();i++)
+//			{
+//			if (new_poly.get(i)==1)
+//				positions.add(i);
+//			}
+//			ArrayList<Integer> sub_new_poly1=new ArrayList<Integer>();
+//			ArrayList<Integer> result=new ArrayList<Integer>();
+//			//result.add(0);
+//			
+//			for (int i=0;i<positions.size();i++)
+//			{
+//				sub_new_poly1=new ArrayList<Integer>();
+//				for (int j=0;j<positions.get(i);j++)
+//					sub_new_poly1.add(0);
+//				sub_new_poly1.add(1);
+//				result=(Add((result),mod(sub_new_poly1)));
+//			}
+//			
+//	
+//			return result;
+//
+//	}
+	
+//	public static ArrayList<Integer> divide(ArrayList<Integer> irreducible,ArrayList<Integer> poly)
+//	{
+//		/**
+//		 * I wrote this function later realizing I wont need it! 
+//		 * This method takes two polynomials in ArrayListform and returns irreducible/poly
+//		 * in the form of an arrayList
+//		 * 
+//		 * @param       irreducible    Array list representing first polynomial
+//		 * @param       poly    Array list representing second polynomial
+//		
+//		 
+//		 */
+//		ArrayList<Integer> remainder_poly=new ArrayList<Integer>();
+//		ArrayList<Integer> result=new ArrayList<Integer>();
+//		ArrayList<Integer> irreducible_copy=new ArrayList<Integer>();
+//		irreducible_copy.addAll(irreducible);
+//		int irreducible_power=irreducible.size()-1;
+//		int power=poly.size()-1;
+//		int a=irreducible_power-power;
+//		
+//		while (irreducible_power>=power)
+//		{
+//			remainder_poly=new ArrayList<Integer>();
+//			for (int i=0;i<=a;i++)
+//			{
+//				if (i==a)
+//					remainder_poly.add(1);
+//				else
+//					remainder_poly.add(0);
+//			}
+//			irreducible_copy=Subtract(irreducible_copy, Multiply(remainder_poly, poly));
+//			irreducible_power=irreducible_copy.size()-1;
+//			result=Add(result,remainder_poly);
+//			a=irreducible_power-power;
+//		}
+//		return result;
+//	}
 	
 	public static ArrayList<Integer> inverse(ArrayList<Integer> poly)
 	{
@@ -366,35 +411,80 @@ public class Fields {
 		 */
 		ArrayList<Integer> inverse=new ArrayList<Integer>();
 		int x=(int)(Math.pow(2, irreducible.size()-1))-2;
+		
 		inverse=SquareAndMult(poly, x);
 		
 		return inverse;
 	}
+	
 	public static ArrayList<Integer> SquareAndMult(ArrayList<Integer> poly,int x)
 	{
-		/**
-		 * This method takes two polynomials in ArrayListform and returns 
-		 * (poly^x)mod irreducible
-		 * 
-		 * @param       poly    Array list representing  polynomial
-		 * @param       x    power to which polynomial is to be raised. 
-		
-		 
-		 */
-		ArrayList<Integer> answer=new ArrayList<Integer>();
-		answer.add(1);
-		for (int j=1;j<=x;j++)
+	
+	ArrayList<Integer> Q=new ArrayList<Integer>();
+	ArrayList<Integer> N=new ArrayList<Integer>();
+	
+	//Q=null;
+	//ArrayList<ArrayList<Integer>> N=new ArrayList<ArrayList<Integer>>();
+	N.addAll(poly);
+	
+	String s=Integer.toBinaryString(x);
+	ArrayList<Integer> m=new ArrayList<Integer>();
+	//System.out.println(s);
+	
+	m=StringToList(s);
+	ArrayList<Integer> answer=new ArrayList<Integer>();
+	Q.add(1);
+	for (int i=0;i<s.length();i++)
+	{
+		//System.out.println("idhar"+s.charAt(i));
+		if (Integer.parseInt(""+s.charAt(i))==1)
 		{
-		answer=Multiply(answer,poly);
-		answer=helper_mod(answer);
+			Q=helper_mod(Fields.Multiply(Q, Q));
+		Q=helper_mod(Fields.Multiply(Q, N));
 		}
-		return answer;
+		else 
+			Q=helper_mod(Fields.Multiply(Q, Q));
+
+			
 	}
+	
+	return Q;
+}
+	
+//	public static ArrayList<Integer> SquareAndMult(ArrayList<Integer> poly,int x)
+//	{
+//		/**
+//		 * This method takes two polynomials in ArrayListform and returns 
+//		 * (poly^x)mod irreducible
+//		 * 
+//		 * @param       poly    Array list representing  polynomial
+//		 * @param       x    power to which polynomial is to be raised. 
+//		
+//		 
+//		 */
+//				ArrayList<Integer> answer=new ArrayList<Integer>();
+//		answer.add(1);
+//		
+//		for (int j=1;j<=x;j++)
+//		{
+//		answer=Multiply(answer,poly);
+//		answer=helper_mod(answer);
+//		}
+//		return answer;
+//	}
 
 	public static ArrayList<Integer> StringToList(String x1)
 	{
 		ArrayList<Integer> poly1=new ArrayList<Integer> ();
-		for (int i=x1.length()-1;i>=0;i--)
+		char ch=x1.charAt(0);
+		int x=0;
+		while (ch=='0' && x<x1.length())
+		{
+			x++;
+			if (x<x1.length())
+			ch=x1.charAt(x);
+		}
+		for (int i=x1.length()-1;i>=x;i--)
 			poly1.add(Integer.parseInt(""+x1.charAt(i)));
 		return poly1;
 	}
