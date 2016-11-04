@@ -5,21 +5,6 @@ import java.util.Map.Entry;
 import java.lang.*;
 public class Shanks {
 
-	public static ArrayList<ArrayList<Integer>> point_multiple(ArrayList<ArrayList<Integer>> alpha,int x,Elliptic_Curve ec, Fields gf)
-	{
-		if (x==0)
-			return null;
-		if (x==1)
-			return alpha;
-		ArrayList<ArrayList<Integer>> new_point=new ArrayList<ArrayList<Integer>>();
-		new_point.addAll(alpha);
-		for (int i=2;i<=x;i++)
-		{
-			new_point=ec.point_addition(alpha, new_point, gf);
-			//System.out.println("newpoint: "+new_point);
-		}
-		return new_point;
-	}
 	public static ArrayList<ArrayList<Integer>> double_add(ArrayList<ArrayList<Integer>> alpha,int x,Elliptic_Curve ec, Fields gf)
 	
 	{
@@ -45,125 +30,61 @@ public class Shanks {
 	public static int shanks(ArrayList<ArrayList<Integer>> alpha,ArrayList<ArrayList<Integer>> beta, long n,Elliptic_Curve ec, Fields gf)
 	{
 		int m=(int) Math.ceil(Math.sqrt(n));
-		System.out.println("m: "+m);
+		//System.out.println("m: "+m);
 		ArrayList<ArrayList<Integer>> temp_point=new ArrayList<ArrayList<Integer>>();
 		ArrayList<ArrayList<Integer>> temp_point1=new ArrayList<ArrayList<Integer>>();
-		Map<Integer,ArrayList<ArrayList<Integer>>> j_vals=new HashMap<Integer,ArrayList<ArrayList<Integer>>>();
-		Map<Integer,ArrayList<ArrayList<Integer>>> i_vals=new HashMap<Integer,ArrayList<ArrayList<Integer>>>();
-		
+		List<Shanks_tuple> j_vals=new ArrayList<Shanks_tuple>();
+		List<Shanks_tuple> i_vals=new ArrayList<Shanks_tuple>();
+		Shanks_tuple st=new Shanks_tuple();
 		for (int j=0;j<m;j++)
 		{
+			temp_point=new ArrayList<ArrayList<Integer>>();
 			temp_point=double_add(alpha,(m*j),ec,gf);
-			j_vals.put(j, temp_point);
-			//System.out.println("in jvals " +j);
-		}
-		
-		for (int i=0;i<m;i++)
-		{
-		
-			temp_point1=double_add(alpha,i,ec,gf);
+			st=new Shanks_tuple();
+			st.point=temp_point; st.x=j;
+			j_vals.add(st);
+			
+			temp_point=new ArrayList<ArrayList<Integer>>();
+			temp_point1=new ArrayList<ArrayList<Integer>>();
+			temp_point1=double_add(alpha,j,ec,gf);
 			temp_point1=ec.point_inverse(temp_point1,gf);
 			temp_point=ec.point_addition(beta,temp_point1, gf);
-			i_vals.put(i, temp_point);
-			//System.out.println("in ivals " +i);
+			st=new Shanks_tuple();
+			st.point=temp_point; st.x=j;
+			//System.out.println("in jvals " +j);
+			i_vals.add(st);
+			
 		}
-		
-		 List<Map.Entry<Integer, ArrayList<ArrayList<Integer>>>> list = 
-			        new ArrayList<>(i_vals.entrySet());
-			    Collections.sort(list, new ListComparator());
-
-		//Map new_i_vals = sort_map_values(i_vals);
-//		System.out.println(i_vals);
-//		System.out.println(j_vals);
+		Collections.sort(j_vals);
+		Collections.sort(i_vals);
 		int final_j=0,final_i=0,flag=0;
-		for (Entry<Integer, ArrayList<ArrayList<Integer>>> entry1 : j_vals.entrySet()) 
+		for (Shanks_tuple s_t1 : j_vals) 
 		{
-		    int key1 = entry1.getKey();
+		    int key1 = s_t1.x;
 		    ArrayList<ArrayList<Integer>> value1 = new ArrayList<ArrayList<Integer>>();
-		    	value1=entry1.getValue();
-		    	if (i_vals.containsValue(value1))
-		    	{
-		    		for (Entry<Integer, ArrayList<ArrayList<Integer>>> entry2 : i_vals.entrySet()) 
+		    	value1=s_t1.point;
+		    		for (Shanks_tuple s_t2 : i_vals) 
 		    		{
-		    		    int key2 = entry2.getKey();
+		    		    int key2 = s_t2.x;
 		    		    ArrayList<ArrayList<Integer>> value2 = new ArrayList<ArrayList<Integer>>();
-		    		    	value2=entry2.getValue();
+		    		    	value2=s_t2.point;
 		    		    	if (ec.point_equals(value1, value2))
 		    		    	{
 		    		    		flag=1;
 		    		    		final_j=key1;
 		    		    		final_i=key2;
-		    		    		System.out.println("i and j: "+final_i+" "+final_j+" "+value1+" "+value2);
+		    		    	//	System.out.println("i and j: "+final_i+" "+final_j+" "+value1+" "+value2);
 		    		    		break;
 		    		   
 		    		    	}
 		    		}
-		    	}
-		    	else
-			    	continue;
 		    	if (flag==1)
 		    	return (m*final_j+final_i);
-		}    	
-		   
+		}    
 		return 0;
 	}
-	public static LinkedHashMap sort_map_values(HashMap<Integer, ArrayList<ArrayList<Integer>>> i_vals)
-	{
-		LinkedHashMap sorted_map = new LinkedHashMap();
-		int x1=0,y1=0,x2=0,y2=0;
-		for (int i : i_vals.keySet()) 
-		{
-		    int key = 0;
-			
-		    ArrayList<ArrayList<Integer>> value1 = new ArrayList<ArrayList<Integer>>();
-		    	value1=i_vals.get(i);
-		    	if (value1==null)
-	  	    	  {x1=0;y1=0;}
-	  	    	  else if (value1.isEmpty())
-	  	    	  {x1=0;y1=0;}
-	  	    	  else if (value1.get(0)==null)
-	  	    	  {x1=0;y1=0;}
-	  	    	  else 
-	  	    	  {
-	  	    		  x1=ListToInt(value1.get(0));
-	  	    		  y1=ListToInt(value1.get(1));
-	  	    	  }
-		    		for (int j: i_vals.keySet()) 
-		    		{
-		    		 //   int key2 = j;
-		    		    ArrayList<ArrayList<Integer>> value2 = new ArrayList<ArrayList<Integer>>();
-		    		    value2=i_vals.get(j);
-		    		    
-		  	    	  if (value2==null)
-		  	    	  {x2=0;y2=0;}
-		  	    	  else if (value2.isEmpty())
-		  	    	  {x2=0;y2=0;}
-		  	    	  else if (value2.get(0)==null)
-		  	    	  {x2=0;y2=0;}
-		  	    		  else 
-		  		    	  {
-		  		    		  x2=ListToInt(value2.get(0));
-		  		    		  y2=ListToInt(value2.get(1));
-		  		    	  }
-		  	    	  int val1=x1*x1+y1;
-		  	    	  int val2=x2*x2+y2;
-		  	    	  if (val2<val1)
-		  	    	  {
-		  	    		ArrayList<ArrayList<Integer>> value = new ArrayList<ArrayList<Integer>>();
-		  	    		value.addAll(value2);
-		  	    		key=j;							  
-		  	    	  }
-//		  	    	ArrayList<ArrayList<Integer>> value = new ArrayList<ArrayList<Integer>>();
-//					int key=0;
-				    
 
-		    		    	
-		    		}
-		    	}
-		    	
-		return sorted_map;
-	}
-	public static int ListToInt(ArrayList<Integer> list) {
+		public static int ListToInt(ArrayList<Integer> list) {
 		// TODO Auto-generated method stub
 		int ans=0;
 		for (int i=0;i<list.size();i++)
@@ -178,60 +99,65 @@ public class Shanks {
 	{
 		
 		BufferedReader inp=new BufferedReader(new InputStreamReader(System.in));
-		System.out.println("Enter the value of k for GF(2^k):" );
-		int k=Integer.parseInt(inp.readLine());
-//		ArrayList<Integer> prime_factors=new ArrayList<Integer>();
-//		prime_factors.addAll(factors(n));
-		//System.out.println("Prime factors of (2^k)-1: "+prime_factors);
-		Fields gf=new Fields(k);
-		System.out.println("irreducible: "+gf.irreducible);
-		System.out.println("Elliptic curve type: y^2 + x*y = x^3 + a*x^2 + b,");
-//		System.out.println("Enter the value of A for elliptic curve from GF(2^k): ");
-//		String a=(inp.readLine());
-//		System.out.println("Enter the value of B for elliptic curve from GF(2^k): ");
-//		String b=(inp.readLine());	
-//		System.out.println("Enter the value of n: ");
-//		int n=Integer.parseInt(inp.readLine());
-		String a="100000";String b="100001";int n=56;
-		Elliptic_Curve ec=new Elliptic_Curve(a,b,gf);
+		int k;
+		String a="1000000";String b="1000001";int n=124;
 		ArrayList<ArrayList<Integer>> alpha=new ArrayList<ArrayList<Integer>>();
 		ArrayList<ArrayList<Integer>> beta=new ArrayList<ArrayList<Integer>>();
 		ArrayList<Integer> x_point=new ArrayList<Integer>();
 		ArrayList<Integer> y_point=new ArrayList<Integer>();
 		String x,y;
 		
-//		System.out.println("Enter the value of alpha x coordinate: ");
-//		x=inp.readLine();
-//		System.out.println("Enter the value of alpha y coordinate: ");
-//		y=inp.readLine();
+		
+//		Order for point alpha= 31 for k=7
+//		k=7;
+//		Fields gf=new Fields(k);n=124;
+//		a="1000000";b="1000001";
+//		Elliptic_Curve ec=new Elliptic_Curve(a,b,gf);
+//		x="1100100";y="1100010";
 //		x_point.addAll(gf.StringToList(x));
 //		y_point.addAll(gf.StringToList(y));
-//		alpha.add(x_point);alpha.add(y_point);		
-//		System.out.println("Enter the value of beta x coordinate: ");
-//		x=inp.readLine();
-//		System.out.println("Enter the value of beta y coordinate: ");
-//		y=inp.readLine();
+//		alpha.add(x_point);alpha.add(y_point);
+//		beta.addAll(Shanks.double_add(alpha, 136, ec, gf));
 //		x_point=new ArrayList<Integer>();
 //		y_point=new ArrayList<Integer>();
+//		
+//		k=35 
+//				a=”10000”; b=”10001”;
+//				cardinality=number of points=34359374628
+//				Point P=(101,10100)
+//				Order of P=3817708292
+
+//		k=35;
+//		Fields gf=new Fields(k);
+//		long n1=34359374628L;
+//		a="10000";b="10001";
+//		Elliptic_Curve ec=new Elliptic_Curve(a,b,gf);
+//		x="101";y="10100";
 //		x_point.addAll(gf.StringToList(x));
 //		y_point.addAll(gf.StringToList(y));
-//		beta.add(x_point);beta.add(y_point);
-		
+//		alpha.add(x_point);alpha.add(y_point);
+//		beta.addAll(Shanks.double_add(alpha, 136, ec, gf));
+//		x_point=new ArrayList<Integer>();
+//		y_point=new ArrayList<Integer>();
 
-		x="001011";
-		y="011100";
+
+		k=25;
+		Fields gf=new Fields(k);
+		n=33561148;
+		a="10000";b="10001";
+		Elliptic_Curve ec=new Elliptic_Curve(a,b,gf);
+		x="101";y="10100";
 		x_point.addAll(gf.StringToList(x));
 		y_point.addAll(gf.StringToList(y));
 		alpha.add(x_point);alpha.add(y_point);
-		
+		beta.addAll(Shanks.double_add(alpha, 136, ec, gf));
 		x_point=new ArrayList<Integer>();
 		y_point=new ArrayList<Integer>();
-		
-		
-		beta.addAll(Shanks.double_add(alpha, 54, ec, gf));
+
+		int ans=shanks(alpha,beta,n, ec, gf);
 		System.out.println(alpha+" "+beta );
-		System.out.println(shanks(alpha,beta,n, ec, gf));
-		System.out.println(double_add(alpha, 8, ec, gf));
+		System.out.println("Shanks solution: "+ans);
+		System.out.println(double_add(alpha, ans, ec, gf));
 
 		
 
